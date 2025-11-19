@@ -2,7 +2,7 @@ import streamlit as st
 import random
 from datetime import datetime, date
 
-# 1. 응원 메시지 리스트 정의
+# 1. 응원 메시지 리스트 정의 (기존 유지)
 morning_messages = [
     "{name}님, 상쾌한 아침이에요! 당신의 멋진 하루를 기대하고 응원합니다.",
     "오늘은 {name}님에게 어제보다 더 행복할 거예요. 활기차게 시작해 보세요!",
@@ -11,14 +11,13 @@ morning_messages = [
     "모닝 커피처럼 향긋하고 에너지 넘치는 하루 되세요, {name}님!", "{name}님, 잠재력을 믿으세요!", "{name}님 주변의 작은 행복들을 발견하는 하루가 되길 바랍니다.", "오늘 날씨가 어떻든, {name}님의 마음은 늘 따뜻하고 포근했으면 좋겠습니다."
 ]
 
-# 2. 온도별/장르별 노래 리스트 정의 (재생 가능한 링크로 최종 확정)
+# 2. 온도별/장르별 노래 리스트 정의 (기존 유지)
 song_recommendations = {
     "추워요 ❄️": {
         "발라드/R&B": [
-            # 재생 오류 해결을 위해 링크를 교체했습니다.
-            {"title": "눈사람", "artist": "정승환", "url": "https://youtu.be/MEqHS1bybMQ?si=FanaVN4iYxqGkknm"},  # MV 리부트 버전
-            {"title": "첫 눈", "artist": "EXO", "url": "https://youtu.be/mHe3amVvtVo?si=YDevgRIjCMjJymHv"},    # SM STATION 버전
-            {"title": "눈", "artist": "자이언티 (feat. 이문세)", "url": "https://youtu.be/X9UTOEcO-1s?si=2Rit0usTdoM4HIOa"}, # 공식 채널 라이브 클립
+            {"title": "눈사람", "artist": "정승환", "url": "https://youtu.be/MEqHS1bybMQ?si=FanaVN4iYxqGkknm"}, 
+            {"title": "첫 눈", "artist": "EXO", "url": "https://youtu.be/mHe3amVvtVo?si=YDevgRIjCMjJymHv"}, 
+            {"title": "눈", "artist": "자이언티 (feat. 이문세)", "url": "https://youtu.be/X9UTOEcO-1s?si=2Rit0usTdoM4HIOa"}, 
             {"title": "This Christmas", "artist": "태연", "url": "https://youtu.be/sN-kdckGLiE?si=gkfFS6Yd2C3iDwls"}, 
             {"title": "for you", "artist": "성시경", "url": "https://youtu.be/EXO4x9pCxag?si=VEVyUQIeqT-AOre4"},
         ],
@@ -50,85 +49,98 @@ song_recommendations = {
     }
 }
 
-# 3. 페이지 설정 및 제목
+# 3. 페이지 설정 및 제목 (기존 유지)
 st.set_page_config(layout="wide")
 st.title("☀️ 아침을 여는 응원 메시지 & 맞춤 노래 추천")
 
-# 4. 사용자 입력 섹션 (Sidebar 사용)
+# 4. 사용자 입력 섹션 (Sidebar와 Form 사용으로 변경)
 with st.sidebar:
     st.header("사용자 설정")
     
-    # 🗓️ 날짜 입력 위젯
-    selected_date = st.date_input("🗓️ 날짜를 선택해 주세요", value=datetime.now().date())
-    st.caption(f"선택된 날짜: {selected_date.strftime('%Y년 %m월 %d일')}")
+    # st.form을 사용하여 모든 입력값을 묶고 제출 버튼으로 결과 표시를 제어합니다.
+    with st.form(key='recommendation_form'):
+        
+        # 🗓️ 날짜 입력 위젯 (기존 유지)
+        selected_date = st.date_input("🗓️ 날짜를 선택해 주세요", value=datetime.now().date())
+        st.caption(f"선택된 날짜: {selected_date.strftime('%Y년 %m월 %d일')}")
+        st.markdown("---")
+        
+        # 👤 사용자 이름 입력 위젯 (기존 유지)
+        user_name = st.text_input("👤 당신의 이름을 입력해주세요.", value="친구")
+        st.caption("이름을 입력하면 맞춤형 응원 메시지를 받을 수 있어요.")
+        st.markdown("---")
+        
+        # ⭐ 체감 온도 선택: st.radio 위젯 (기존 유지)
+        st.subheader("오늘의 체감 온도는?")
+        temp_choice = st.radio(
+            "🌡️ 당신이 느끼는 온도를 선택하세요.",
+            options=list(song_recommendations.keys()),
+            index=1 # 기본값은 '적당해요 😊'
+        )
+        
+        # 🎸 장르 선택 (st.selectbox) (기존 유지)
+        # temp_choice가 변경될 때마다 available_genres가 동적으로 변경됨
+        available_genres = list(song_recommendations[temp_choice].keys())
+        genre_choice = st.selectbox(
+            "🎸 원하는 노래 장르를 선택하세요.",
+            options=available_genres
+        )
+        st.markdown("---")
+        
+        # 🚀 제출 버튼: 이 버튼이 눌려야 메인 화면에 추천이 나타납니다.
+        submit_button = st.form_submit_button(label='🚀 음악 추천받고 응원받기')
+
+
+# 사용자가 '음악 추천받기' 버튼을 눌렀을 때만 아래 내용(섹션 5, 6, 7)을 출력합니다.
+if submit_button:
+    
+    # 5. 선택된 날짜 표시 (메인 화면)
+    st.subheader(f"📅 {selected_date.strftime('%Y년 %m월 %d일, %A')}")
     st.markdown("---")
     
-    # 👤 사용자 이름 입력 위젯
-    user_name = st.text_input("👤 당신의 이름을 입력해주세요.", value="친구")
-    st.caption("이름을 입력하면 맞춤형 응원 메시지를 받을 수 있어요.")
+    # 6. 추천 요약 섹션
+    st.header("🎵 오늘의 맞춤 추천 설정")
+    col_info1, col_info2 = st.columns(2)
+    
+    with col_info1:
+        st.info(f"**체감 온도**: {temp_choice}", icon="🌡️")
+    with col_info2:
+        st.info(f"**선택 장르**: {genre_choice}", icon="🎧")
+        
     st.markdown("---")
     
-    # ⭐ 체감 온도 선택: st.radio 위젯 (안정적인 버전) ⭐
-    st.subheader("오늘의 체감 온도는?")
-    temp_choice = st.radio(
-        "🌡️ 당신이 느끼는 온도를 선택하세요.",
-        options=list(song_recommendations.keys()),
-        index=1 # 기본값은 '적당해요 😊'
-    )
     
-    # 🎸 장르 선택 (st.selectbox)
-    available_genres = list(song_recommendations[temp_choice].keys())
-    genre_choice = st.selectbox(
-        "🎸 원하는 노래 장르를 선택하세요.",
-        options=available_genres
-    )
-
-
-# 5. 선택된 날짜 표시 (메인 화면)
-st.subheader(f"📅 {selected_date.strftime('%Y년 %m월 %d일, %A')}")
-
-st.markdown("---")
-
-# 6. 추천 요약 섹션
-st.header("🎵 오늘의 맞춤 추천 설정")
-col_info1, col_info2 = st.columns(2)
-
-with col_info1:
-    st.info(f"**체감 온도**: {temp_choice}", icon="🌡️")
-with col_info2:
-    st.info(f"**선택 장르**: {genre_choice}", icon="🎧")
+    # 7. 주요 응원 메시지 및 추천 노래 섹션
+    col1, col2 = st.columns(2)
     
-st.markdown("---")
-
-
-# 7. 주요 응원 메시지 및 추천 노래 섹션
-col1, col2 = st.columns(2)
-
-# 응원 메시지 및 To-Do 리스트 표시
-with col1:
-    st.header("💖 오늘의 맞춤 응원 메시지")
+    # 응원 메시지 및 To-Do 리스트 표시
+    with col1:
+        st.header("💖 오늘의 맞춤 응원 메시지")
+        
+        recommended_message_template = random.choice(morning_messages)
+        final_message = recommended_message_template.format(name=user_name) 
+        
+        st.success(f"**\" {final_message} \"**", icon="✨")
+        
+        st.subheader("✅ 오늘 할 일 (To-Do)")
+        st.checkbox("따뜻한 물 한 잔 마시기")
+        st.checkbox("오늘 할 일 3가지 정리하기")
+        st.checkbox("추천 노래 들으며 활력 충전하기")
     
-    recommended_message_template = random.choice(morning_messages)
-    final_message = recommended_message_template.format(name=user_name) 
-    
-    st.success(f"**\" {final_message} \"**", icon="✨")
-    
-    st.subheader("✅ 오늘 할 일 (To-Do)")
-    st.checkbox("따뜻한 물 한 잔 마시기")
-    st.checkbox("오늘 할 일 3가지 정리하기")
-    st.checkbox("추천 노래 들으며 활력 충전하기")
-
-# 추천 노래 표시
-with col2:
-    st.header("🎧 오늘의 맞춤 추천 음악")
-    
-    selected_song_list = song_recommendations[temp_choice][genre_choice]
-    recommended_song = random.choice(selected_song_list)
-    
-    st.markdown(f"**🎶 {recommended_song['title']}** - {recommended_song['artist']}")
-    
-    # 유튜브 영상 임베드 (링크 최종 교체)
-    st.video(recommended_song['url'])
-    
-st.markdown("---")
-st.caption("설정(날짜/이름/온도/장르)을 변경하거나, 브라우저를 새로고침(F5)하면 앱이 업데이트됩니다.")
+    # 추천 노래 표시
+    with col2:
+        st.header("🎧 오늘의 맞춤 추천 음악")
+        
+        selected_song_list = song_recommendations[temp_choice][genre_choice]
+        recommended_song = random.choice(selected_song_list)
+        
+        st.markdown(f"**🎶 {recommended_song['title']}** - {recommended_song['artist']}")
+        
+        # 유튜브 영상 임베드
+        st.video(recommended_song['url'])
+        
+    st.markdown("---")
+    st.caption("설정(날짜/이름/온도/장르)을 변경하고 🚀 **음악 추천받고 응원받기** 버튼을 누르면 앱이 업데이트됩니다.")
+else:
+    # 버튼을 누르기 전 초기 화면
+    st.info("왼쪽 사이드바에서 사용자 정보와 오늘의 체감 온도를 선택하고 🚀 **음악 추천받고 응원받기** 버튼을 눌러주세요!", icon="👈")
